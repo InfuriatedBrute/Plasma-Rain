@@ -94,7 +94,7 @@ def load_json(path):
         return toReturn
 
 
-# unused, shelvers preferred so far. It is fairly difficult to save json without deleting comments.
+# unused, picklers preferred so far. It is fairly difficult to save json without deleting comments.
 #
 # def save_json(to_save, path, sort_keys=False, indent=2):
 #     """Saves the to_save dictionary to a json file if the path is a json file,
