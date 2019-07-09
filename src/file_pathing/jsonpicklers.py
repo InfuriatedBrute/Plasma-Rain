@@ -1,7 +1,9 @@
 import os
 import jsonpickle
 
-save_directory = 'saves\\'
+#https://stackoverflow.com/a/7166139
+project_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+save_directory = os.path.join(project_folder, 'saves\\')
 save_extension = '.save'
 
 jsonpickle.set_encoder_options('json', sort_keys=True, indent=4)

@@ -1,28 +1,64 @@
 from utils.enum import enum
-from dataclasses import dataclass
+from builtins import int, str
 from typing import List
+from dataclasses import dataclass
 
-#There should not be a single game object which is not a Namey or Inty.
+# All game objects are Typed, except Global_Storage, which is singleton
+# all types are mod-based, such as PLASMA_RIFLE
+# UI elements and other stuff that aren't exactly "game objects" are the exception. 
+# The non-dataclasses below are not intended to be initialized, only inherited
 
-#types are mod-based, supertypes are not
-#Every game should have one Namey with HOME_BASE type and BASE supertype, unless research isn't shared
-#Recommended BASE  stats are starting attributes and whether the base is established or not
 
-Namey_Supertype = enum('SOLDIER', 'CRAFT', 'BASE')
-@dataclass
-class Namey:
+class Typed:
     type : str
-    supertype : Namey_Supertype
+
+
+class Coords:
+    x : int = None
+    y : int = None
+
+
+class Nameable(Typed):
     name : str
-    inventory : List
-    stats : dict[str : int]
 
-Inty_Supertype = enum('ITEM', 'TERRAIN', 'STRUCTURE', 'PRODUCTION', 'PRODUCTION_PROGRESS', 'SCORE')
-#ITEM stat = number of that item, TERRAIN stat = lifetime, STRUCTURE stat = HP, or days until complete if negative
-#PRODOUCTION stat = number of sci/eng working (or not working if type = "idle"), PRODUCTION_PROGRESS = completion of tech/manufacture 0-100
-#SCORE stat = number of that particular score
+
+class Quantitied(Typed):
+    quantity : int = 1
+
+
 @dataclass
-class Inty:
-    type : str
-    supertype : Inty_Supertype
-    stat : int
+class Terrain(Typed, Coords):
+    lifetime : int    
+
+@dataclass
+class Item(Typed, Coords):
+    quantity : int = 1
+
+
+@dataclass 
+class Unit(Nameable, Coords):
+    inventory : List[Item]
+    str, dex, agi, ref, wil, TU, HP, EP, MP, wounds : int
+
+    
+class Storage:
+    units : List[Unit]
+    inventory : List[Item]
+
+
+@dataclass
+class Craft(Nameable, Storage):
+    hp, fuel : int
+
+
+@dataclass
+class Structure(Typed):
+    hp : int
+
+
+@dataclass
+class Region(Typed, Coords):
+    structures : List[Structure]
+    crafts : List[Craft]
+    score : int
+    storage : Storage #may refer to global or planetary storage, modder option
