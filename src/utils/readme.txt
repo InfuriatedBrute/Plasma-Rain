@@ -1,2 +1,0 @@
-This utils package contains most files which are useful independently from the purpose of this project.
-They are intended to be used many times throughout the code, but be fairly useless and mundane to a non-developer.

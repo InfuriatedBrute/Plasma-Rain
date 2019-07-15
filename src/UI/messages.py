@@ -2,11 +2,10 @@ import textwrap
 from utils.initialize_all import initialize_all_pre
 from dataclasses import dataclass
 from builtins import str
-
 @dataclass
 class Message:
     text : str
-    color : (int, int, int) = (255, 255, 255)
+    color : namedtuple('color', 'R G B') = (255, 255, 255)
 
 
 class MessageLog:
