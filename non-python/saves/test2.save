@@ -1,0 +1,8 @@
+{
+ "entities":{
+  "player":"@"
+ },
+ "game_map":"game_map",
+ "game_state":"game_state",
+ "message_log":"message_log"
+}

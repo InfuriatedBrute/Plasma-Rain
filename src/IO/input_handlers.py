@@ -1,7 +1,6 @@
 from concepts.states import totalState, MainState, EscapeState
 
 
-    
 def handle_mouse(mouse_event):
     if mouse_event:
         (x, y) = mouse_event.cell
@@ -12,6 +11,7 @@ def handle_mouse(mouse_event):
             return {'right_click': (x, y)}
 
     return {}
+
 
 def handle_keys(user_input, state : totalState):
     if(user_input):

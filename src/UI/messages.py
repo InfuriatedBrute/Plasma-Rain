@@ -1,7 +1,10 @@
-import textwrap
-from utils.initialize_all import initialize_all_pre
-from dataclasses import dataclass
 from builtins import str
+from dataclasses import dataclass
+import textwrap
+
+from utils.initialize_all import initialize_all_pre
+
+
 @dataclass
 class Message:
     text : str

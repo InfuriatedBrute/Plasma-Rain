@@ -1,6 +1,7 @@
 from functools import wraps
 import inspect
 
+
 def _intialize_all(self, pre, names, defaults, func, *args, **kargs):
     """
     Private method better described by the methods that call it.

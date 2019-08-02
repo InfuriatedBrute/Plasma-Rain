@@ -1,6 +1,16 @@
-from json import loads, dumps
+import json
 import os
 
+import jsonpickle
+
+# https://stackoverflow.com/a/7166139
+project_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+save_directory = os.path.join(project_folder, 'non-python\\saves\\')
+save_extension = '.json'
+
+sort_keys = True
+indent = 1
+jsonpickle.set_encoder_options('simplejson', sort_keys, indent)
 
 def remove_comments(s):
     """
@@ -66,19 +76,20 @@ def remove_comments(s):
     return "".join(toReturn)
 
 
-def load_json(path):
+def load_json(path, pickle=True):
     """
     Parameters:
         path (str) : A path pointing to the json file or directory of json files to load
     
     Returns:
-        a dictionary containing all json data and directories with json files at path, or None if no such files are found.
-        Comments in json files are not included.
+        a dictionary containing all json data at the path and its subdirectories with json files at path,
+        or None if no such files are found. Comments in json files are not included.
     """
      
-    if(".json") in path:
+    if(".json" in path or save_extension in path):
         with open(path) as file:
-            return loads(remove_comments(file.read()))
+            data = remove_comments(file.read())
+            return jsonpickle.decode(data) if pickle else json.loads(data)
     else:
         toReturn = dict()
         for file_name in os.listdir(path):
@@ -96,26 +107,45 @@ def load_json(path):
 
 # unused, picklers preferred so far. It is fairly difficult to save json without deleting comments.
 #
-# def save_json(to_save, path, sort_keys=False, indent=2):
-#     """Saves the to_save dictionary to a json file if the path is a json file,
-#      or if the path is a directory, saves each top-level dictionary value to a 
-#      json file with the name of the key. Untested and cannot save multiple
-#      folders because it can only tell whether a file is meant to be json or folder
-#      from the path. Will throw an error when trying to overwrite a #READONLY file.
-#      Note that for frequent saving data_shelvers are preferred, json is used when 
-#      human-readability is prioritized over ease of saving. In practice this means
-#      persistent settings are json, often read-only, and game-specific data is shelved. """
-#     if(".json" in path):
-#         _write_if_not_readonly(to_save, path, sort_keys, indent)
-#     else:
-#         for file_name, data in to_save:
-#             save_json(data, path + "/" + file_name + ".json", sort_keys, indent)
+def save_json(to_save, path, pickle=True):
+    """Saves the to_save dictionary to a json file if the path is a json file,
+      or if the path is a directory, saves each top-level dictionary value to a 
+      json file with the name of the key. Untested and cannot save multiple
+      folders because it can only tell whether a file is meant to be json or folder
+      from the path. Will throw an error when trying t    o overwrite a #READONLY file.
+      Note that for frequent saving picklers are preferred, json is used when 
+      human-readability is prioritized over ease of saving. In practice this means
+      persistent settings are json, often read-only, and game-specific data is pickled. """
+    if(".json" in path or save_extension in path):
+        _write_if_not_readonly(to_save, path)
+    else:
+        for file_name, data in to_save:
+            save_json(data, path + "/" + file_name + ".json")  # TODO ??
 
             
-def _write_if_not_readonly(to_save, path, sort_keys, indent):            
+def _write_if_not_readonly(to_save, path, pickle=True):            
         if os.path.isfile(path):
             with open(path, 'r') as file: 
                 if file.readline().strip() == "#READONLY":
                     raise RuntimeError("Tried to write to the following read-only file: " + path)
         with open(path, 'w') as file:
-            file.write(dumps(to_save, sort_keys=sort_keys, indent=indent, allow_nan=False, separators=(",", ":")))
+            to_write = jsonpickle.encode(to_save) if pickle \
+                else json.dumps(to_save, sort_keys=sort_keys, allow_nan=False, indent=indent, separators=(",", ":"))
+            file.write(to_write)
+
+        
+def save_game(to_save, saveName='1', pickle=True):
+    path = save_directory + saveName + save_extension
+    save_json(to_save, path, pickle)
+
+
+def load_game(saveName='1', pickle=True):
+    path = save_directory + saveName + save_extension
+    return load_json(path, pickle)
+
+
+def delete_game(saveName='1', pickle=True):
+    path = save_directory + saveName + save_extension
+    if not os.path.isfile(path) and not os.path.isdir(path):
+        raise FileNotFoundError
+    os.remove(path)
