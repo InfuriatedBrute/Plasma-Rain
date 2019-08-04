@@ -3,15 +3,13 @@ import tdl
 
 from IO.constants import config, colors
 from IO.input_handlers import handle_keys, handle_mouse, handle_main_menu
-from IO.jsonpicklers import load_game, save_game, delete_game
+from IO.json_parsers import load_game, save_game, delete_game
 from UI.menus import main_menu, message_box
 from UI.messages import Message
 from concepts.states import totalState
 
-# from IO.initialize_new_game import get_game_variables
-# from render_functions import clear_all, render_all
-# Possible engine features: keyboard targeting, improved LoS, examining, "which thing would you like to pick up"
-# Run function, ? screen
+from IO.initialize_new_game import get_game_variables
+from render_functions import clear_all, render_all
 font_file = 'font/' + config['font'] + '.png'
 
 
