@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "src\engine.py", line 1, in <module>
+    from IO.constants import config, colors
+  File "C:\Users\Dustin\Documents\Workspace\Plasma Rain\src\IO\constants.py", line 3, in <module>
+    from IO.json_parsers import load_json
+  File "C:\Users\Dustin\Documents\Workspace\Plasma Rain\src\IO\json_parsers.py", line 5, in <module>
+    from paths import saves_dir, saves_extension
+ModuleNotFoundError: No module named 'paths'

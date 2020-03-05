@@ -1,6 +1,6 @@
 #READONLY-
 {
-  "window_title":"plasmarain",
+  "window_title":"Plasma Rain",
   "font":"prestige18x18",
   "greyscale":true,
   "screen_width":80,//= map_width
@@ -10,5 +10,5 @@
   "name_length":10,
   "message_x":37, //= name_length*2+17
   "message_width":45, //= screen_width - message_x
-  "message_height":6, //= panel_height - 1
+  "message_height":6 //= panel_height - 1
 }

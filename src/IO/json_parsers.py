@@ -1,12 +1,9 @@
-import json
 import os
 
+import json
 import jsonpickle
+from IO.data.paths import saves_dir
 
-# https://stackoverflow.com/a/7166139
-project_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-save_directory = os.path.join(project_folder, 'non-python\\saves\\')
-save_extension = '.json'
 
 sort_keys = True
 indent = 1
@@ -105,8 +102,6 @@ def load_json(path, pickle=True):
         return toReturn
 
 
-# unused, picklers preferred so far. It is fairly difficult to save json without deleting comments.
-#
 def save_json(to_save, path, pickle=True):
     """Saves the to_save dictionary to a json file if the path is a json file,
       or if the path is a directory, saves each top-level dictionary value to a 
@@ -117,10 +112,10 @@ def save_json(to_save, path, pickle=True):
       human-readability is prioritized over ease of saving. In practice this means
       persistent settings are json, often read-only, and game-specific data is pickled. """
     if(".json" in path or save_extension in path):
-        _write_if_not_readonly(to_save, path)
+        _write_if_not_readonly(to_save, path, pickle)
     else:
         for file_name, data in to_save:
-            save_json(data, path + "/" + file_name + ".json")  # TODO ??
+            save_json(data, path + "/" + file_name + ".json") 
 
             
 def _write_if_not_readonly(to_save, path, pickle=True):            
@@ -135,17 +130,17 @@ def _write_if_not_readonly(to_save, path, pickle=True):
 
         
 def save_game(to_save, saveName='1', pickle=True):
-    path = save_directory + saveName + save_extension
+    path = saves_dir + saveName + ".save"
     save_json(to_save, path, pickle)
 
 
 def load_game(saveName='1', pickle=True):
-    path = save_directory + saveName + save_extension
+    path = saves_dir + saveName + ".save"
     return load_json(path, pickle)
 
 
 def delete_game(saveName='1', pickle=True):
-    path = save_directory + saveName + save_extension
+    path = saves_dir + saveName + ".save"
     if not os.path.isfile(path) and not os.path.isdir(path):
         raise FileNotFoundError
     os.remove(path)
