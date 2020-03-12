@@ -11,13 +11,14 @@ MAP_SIZE = 64
 TILE_SIZE = 32
 # in fractions of screen size
 OFFSET_LENIENCY = 0
+DO_NOT_RENDER = ['', ' ', False]
 
 
 def main():
     terminal.open()
 
     terminal.set("output.vsync=true");
-    terminal.set("window: title='Plasma Rain', resizeable=true, minimum-size=1x1")
+    terminal.set("window: title='Plasma Rain', resizeable=true, minimum-size=16x12")
     terminal.set("window: size=28x21; font: ../data/media/lucida.ttf, size=32x32")
     terminal.set("input.filter={keyboard+}") #Enable key-release events.
     terminal.composition(terminal.TK_ON)
@@ -110,11 +111,12 @@ def main():
                     if(display_min_y <= sy <= display_max_y 
                        and display_min_x- TILE_SIZE<= sx <= display_max_x + TILE_SIZE
                        and not higher_tile_already_rendered[y][x]
-                       and map[z][y][x] not in ['', ' ']):
+                       and map[z][y][x] not in DO_NOT_RENDER):
+                        assert higher_tile_already_rendered not in DO_NOT_RENDER
                         if z < camera_height:
                             terminal.put_ext(0, 0, sx, sy, 0x2588, (terminal.color_from_name('yellow'),terminal.color_from_name('red')) * 4)
                         terminal.put_ext(0, 0, sx, sy, map[z][y][x])
-                        higher_tile_already_rendered[y][x] = True 
+                        higher_tile_already_rendered[y][x] = map[z][y][x] 
         
         #print overlay
         i = 5
