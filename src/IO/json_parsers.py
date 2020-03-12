@@ -73,7 +73,7 @@ def remove_comments(s):
     return "".join(toReturn)
 
 
-def load_json(path, pickle=True):
+def load_json(path, pickle=True, encoding = 'utf8'):
     """
     Parameters:
         path (str) : A path pointing to the json file or directory of json files to load
@@ -84,9 +84,9 @@ def load_json(path, pickle=True):
     """
      
     if(".json" in path or save_extension in path):
-        with open(path) as file:
+        with open(path, encoding = encoding) as file:
             data = remove_comments(file.read())
-            return jsonpickle.decode(data) if pickle else json.loads(data)
+            return jsonpickle.decode(data) if pickle else json.loads(data, encoding = encoding)
     else:
         toReturn = dict()
         for file_name in os.listdir(path):
@@ -96,13 +96,13 @@ def load_json(path, pickle=True):
                 if dir_dict != None:
                     toReturn[file_name] = dir_dict
             elif(file_path.contains(".json")):
-                toReturn[file_name[:-5]] = load_json(file_path)
+                toReturn[file_name[:-5]] = load_json(file_path, encoding = encoding)
         if(toReturn.len() == 0):
             return None 
         return toReturn
 
 
-def save_json(to_save, path, pickle=True):
+def save_json(to_save, path, pickle=True, encoding = 'utf8'):
     """Saves the to_save dictionary to a json file if the path is a json file,
       or if the path is a directory, saves each top-level dictionary value to a 
       json file with the name of the key. Untested and cannot save multiple
@@ -112,31 +112,31 @@ def save_json(to_save, path, pickle=True):
       human-readability is prioritized over ease of saving. In practice this means
       persistent settings are json, often read-only, and game-specific data is pickled. """
     if(".json" in path or save_extension in path):
-        _write_if_not_readonly(to_save, path, pickle)
+        _write_if_not_readonly(to_save, path, pickle, encoding = encoding)
     else:
         for file_name, data in to_save:
             save_json(data, path + "/" + file_name + ".json") 
 
             
-def _write_if_not_readonly(to_save, path, pickle=True):            
+def _write_if_not_readonly(to_save, path, pickle=True, encoding = 'utf8'):            
         if os.path.isfile(path):
             with open(path, 'r') as file: 
                 if file.readline().strip() == "#READONLY":
                     raise RuntimeError("Tried to write to the following read-only file: " + path)
         with open(path, 'w') as file:
             to_write = jsonpickle.encode(to_save) if pickle \
-                else json.dumps(to_save, sort_keys=sort_keys, allow_nan=False, indent=indent, separators=(",", ":"))
+                else json.dumps(to_save, sort_keys=sort_keys, allow_nan=False, indent=indent, separators=(",", ":"), encoding = encoding)
             file.write(to_write)
 
         
-def save_game(to_save, saveName='1', pickle=True):
+def save_game(to_save, saveName='1', pickle=True, encoding = 'utf8'):
     path = saves_dir + saveName + ".save"
-    save_json(to_save, path, pickle)
+    save_json(to_save, path, pickle, encoding = encoding)
 
 
-def load_game(saveName='1', pickle=True):
+def load_game(saveName='1', pickle=True, encoding = 'utf8'):
     path = saves_dir + saveName + ".save"
-    return load_json(path, pickle)
+    return load_json(path, pickle, encoding = encoding)
 
 
 def delete_game(saveName='1', pickle=True):

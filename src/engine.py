@@ -34,7 +34,7 @@ def main():
     map = [[[" " for _ in range(map_width)] for _ in range(map_length)] for _ in range(map_depth)]
     
     zone = load_json('../data/placeholder/map.json', pickle = False)
-    load_zone(zone, map)
+    load_zone(zone, map, z = 1, y = 1)
     overlay = load_UTF('../data/placeholder/overlay.txt')
 
     proceed = True
@@ -110,7 +110,9 @@ def main():
                     if(display_min_y <= sy <= display_max_y 
                        and display_min_x- TILE_SIZE<= sx <= display_max_x + TILE_SIZE
                        and not higher_tile_already_rendered[y][x]
-                       and map[z][y][x] != ''):
+                       and map[z][y][x] not in ['', ' ']):
+                        if z < camera_height:
+                            terminal.put_ext(0, 0, sx, sy, 0x2588, (terminal.color_from_name('yellow'),terminal.color_from_name('red')) * 4)
                         terminal.put_ext(0, 0, sx, sy, map[z][y][x])
                         higher_tile_already_rendered[y][x] = True 
         
@@ -215,11 +217,11 @@ def longest_in_list(l, k):
 # Autofall for 0 damage like OpenXCOM
 def load_zone(zone, map, x = 0, y = 0, z = 0):
     #bounds for zone and map respectively
-    #NOTE potentially quite laggy
+    #NOTE potentially low-performance
     mz, my, mx = bounds(map)
     for iz in range(0, len(zone)):
-        for iy in range(0, len(zone[iz + z])):
-            for ix in range(0, len(zone[iz + z][iy + y])):
+        for iy in range(0, len(zone[iz])):
+            for ix in range(0, len(zone[iz][iy])):
                 assert iz + z < mz and iy + y < my and ix + x < mx , "Could not load zone, map bounds exceeded"
                  #NOTE z-coords are always "inverted" here relative to JSON indices
                 map_z = 2*len(zone)-iz + z - mz
