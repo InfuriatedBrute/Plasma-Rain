@@ -8,10 +8,8 @@ from IO.data.paths import mods_dir
 
 
 def get_game_variables(settings=config, mod="vanilla"):
-    message_log = MessageLog(settings['message_x'], settings['message_width'],
-                             settings['message_height'])
     
-    #TODO of course mod data must be organized here, a difficult task
+    #TODO of course mod data must eventually be organized here, a difficult task
     mods_dict = load_json(os.path.join(mods_dir, mod + "\\"))
     
     #build regions, starting craft + soldiers + items according to mod description

@@ -6,15 +6,16 @@ from numpy import char
 from dataclasses import dataclass
 from enum import Enum
 from random import choice, randint
+from utils.decorators import initialize_all_pre
 
 
 class Bar_Stat_Kind(Enum):
-    #TODO adjust
     STR = ("Strength", "Health", "Wounds")
     AGI = ("Agility", "TUs", "RUs")
     REF = ("Reflexes", "Consciousness", "Fatigue")
     FOC = ("Focus", "Accuracy", "Suppression")
     WIL = ("Will", "Morale", "Insanity")
+    ARM = ("Armor", "Front Armor", "Rear Armor")
     def base_short(self) : return self.name()
     def base_long(self): return self.value()[0]
     def current(self): return self.value()[1]
@@ -61,25 +62,24 @@ class Currency(Item):
         return self.icon if self.parent is None else (self.parent.getString() + self.icon)  #eg $RB for bio research
 
 
-
+@initialize_all_pre
 class Unit(Nameable, Coords):
     inventory : List[Item] = []
     STR, AGI, REF, FOC, WIL : Bar_Stat 
     def __init__(self, kind, name, statRanges):
-        self.kind = kind
-        self.name = name
         assert statRanges.length == 10
         self.STR =  Bar_Stat(kind = Bar_Stat_Kind.STR, base = randint(statRanges(0), statRanges(1)))
         self.AGI =  Bar_Stat(kind = Bar_Stat_Kind.AGI, base = randint(statRanges(2), statRanges(3)))
         self.REF =  Bar_Stat(kind = Bar_Stat_Kind.REF, base = randint(statRanges(4), statRanges(5)))
         self.FOC =  Bar_Stat(kind = Bar_Stat_Kind.FOC, base = randint(statRanges(6), statRanges(7)))
         self.WIL =  Bar_Stat(kind = Bar_Stat_Kind.WIL, base = randint(statRanges(8), statRanges(9)))
+        self.ARM =  Bar_Stat(kind = Bar_Stat_Kind.WIL, base = randint(statRanges(9), statRanges(10)))
 
 
 @dataclass
 class Storage:
     units : List[Unit] = [] 
-    inventory : List[Item] = []
+    inventory : List[Item] = [] #should be more complex eventually of course
 
 
 @dataclass
@@ -91,4 +91,4 @@ class Craft(Nameable, Storage):
 class Region(Kinds, Coords):
     crafts : List[Craft] = []
     score : int = 0
-    storage : Storage  # some regions may have the same storage
+    storage : Storage  # some, if not all, regions may have the same storage
