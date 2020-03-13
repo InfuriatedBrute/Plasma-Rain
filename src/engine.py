@@ -1,8 +1,13 @@
+import codecs
+import os.path
 from bearlibterminal import terminal
 from random import randrange
 from math import ceil
-import codecs
 from IO.json_parsers import load_json
+from IO.paths import mods_dir
+from data.mod_classes import build_mod
+from data.game_objects import Tile
+
 
 FPS = 60
 SPEED_CAP = 40
@@ -31,17 +36,19 @@ def main():
     xspeed, yspeed, textoffset = (0,) * 3
 
     map_depth, map_length, map_width = 4, 60, 60
-    #initialize blank map
-    map = [[[" " for _ in range(map_width)] for _ in range(map_length)] for _ in range(map_depth)]
+    #initialize blank tile_map
+    tile_map = [[[" " for _ in range(map_width)] for _ in range(map_length)] for _ in range(map_depth)]
     
-    zone = load_json('../data/placeholder/map.json', pickle = False)
-    load_zone(zone, map, z = 1, y = 1)
+    mod = build_mod(load_json(os.path.join(mods_dir, "vanilla\\"), pickle = False))
+    zone = [[[Tile(kind = mod['tiles'][c]) for c in list] for list in grid] for grid in 
+            load_json('../data/placeholder/map2.json', pickle = False)]
+    load_zone(zone, tile_map, z = 1, y = 1)
     overlay = load_UTF('../data/placeholder/overlay.txt')
 
     proceed = True
 
-    # map will only render to screen inside the display, generally set to not overlap with UI
-    # map will only be scrollable between the offset bounds
+    # tile_map will only render to screen inside the display, generally set to not overlap with UI
+    # tile_map will only be scrollable between the offset bounds
     # coordinates are down-right = positive, "opposite" for the offset    
     #set offset_leniency to 1 and you will only be allowed to scroll 1 more tile than enough to see every tile
     #in general the coordinate system is z, y, x: depth, length, width. No height because it's ambiguous.
@@ -111,12 +118,12 @@ def main():
                     if(display_min_y <= sy <= display_max_y 
                        and display_min_x- TILE_SIZE<= sx <= display_max_x + TILE_SIZE
                        and not higher_tile_already_rendered[y][x]
-                       and map[z][y][x] not in DO_NOT_RENDER):
+                       and tile_map[z][y][x] not in DO_NOT_RENDER):
                         assert higher_tile_already_rendered not in DO_NOT_RENDER
                         if z < camera_height:
                             terminal.put_ext(0, 0, sx, sy, 0x2588, (terminal.color_from_name('yellow'),terminal.color_from_name('red')) * 4)
-                        terminal.put_ext(0, 0, sx, sy, map[z][y][x])
-                        higher_tile_already_rendered[y][x] = map[z][y][x] 
+                        terminal.put_ext(0, 0, sx, sy, tile_map[z][y][x].kind.icon)
+                        higher_tile_already_rendered[y][x] = tile_map[z][y][x] 
         
         #print overlay
         i = 5
@@ -177,12 +184,12 @@ def load_UTF(path):
         length = longest_in_list(array, 1)
         return [pad_to_length(line, length) for line in array]
     
-def pad_to_length(line, length):
+def pad_to_length(line : str, length : int):
     while len(line) != length:
         line += ' '
     return line
 
-def pad_all(l, length):
+def pad_all(l : list, length : int):
     """
      Pads all strings in the list to the given length
      Accepts a list of any dimension, only modifying strings contained by any number of lists
@@ -194,7 +201,7 @@ def pad_all(l, length):
             pad_to_length(item, length)
     return l
 
-def longest_in_list(l, k):
+def longest_in_list(l : list, k : int):
     """
      Takes an n-dimensional list and returns the length of the longest n-k dimenional list in it.
      If k == 0, the function is equivalent to len(l). If k == -1, it will return the lowest dimensional list.
@@ -217,7 +224,7 @@ def longest_in_list(l, k):
 # For purposes of movement, tiles are either half-raised or not, independent of height. Standing on half-raised raises your height by half.
 # You can move up to half-raised at +1TU, up from half-raised to full-raised at 0 TU
 # Autofall for 0 damage like OpenXCOM
-def load_zone(zone, map, x = 0, y = 0, z = 0):
+def load_zone(zone : list, map : list, x = 0, y = 0, z = 0):
     #bounds for zone and map respectively
     #NOTE potentially low-performance
     mz, my, mx = bounds(map)

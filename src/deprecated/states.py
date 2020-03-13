@@ -9,21 +9,14 @@ from enum import Enum
 
 
 class MainState(Enum):
-    MAIN, HI_SCORE, NEW_GAME, \
-     G_MAIN, G_TURN, G_SOLDIER, G_ARMOR, G_EQUIP, G_CRAFT, G_CREW, G_BATTLE, G_ENEMY, G_SCORE, G_GRAPHS, G_COMBAT, \
-     B_MAIN, B_INV, B_TURN, B_ENEMY = range(1, 22)
+    MAIN, \
+     B_MAIN, B_INV, B_ENEMY, B_AIMING = range(0, 21)
 
     
 class EscapeState(Enum):
-    NONE, SAVE, LOAD, OPTIONS, KEYBINDS, PEDIA = range(1, 7)
-
-
-class InputState(Enum):
-    NONE, TYPING, AIMING = range (1, 4)
-
+    NONE, MAIN = range(0, 6)
     
 @dataclass
 class totalState:
     main : MainState
     escape : EscapeState
-    input : InputState
