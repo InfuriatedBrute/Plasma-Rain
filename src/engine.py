@@ -1,12 +1,13 @@
 import codecs
-import os.path
-from bearlibterminal import terminal
-from random import randrange
 from math import ceil
+import os.path
+from random import randrange
+
+from bearlibterminal import terminal
+
 from IO.json_parsers import load_json
 from IO.paths import mods_dir
-from data.mod_classes import build_mod
-from data.game_objects import Tile
+from data.blueprint_objects import build_blueprints, Tile
 
 
 FPS = 60
@@ -17,6 +18,7 @@ TILE_SIZE = 32
 # in fractions of screen size
 OFFSET_LENIENCY = 0
 DO_NOT_RENDER = ['', ' ', False]
+dir =  os.path.dirname(__file__)
 
 
 def main():
@@ -24,7 +26,7 @@ def main():
 
     terminal.set("output.vsync=true");
     terminal.set("window: title='Plasma Rain', resizeable=true, minimum-size=16x12")
-    terminal.set("window: size=28x21; font: ../data/media/lucida.ttf, size=32x32")
+    terminal.set("window: size=28x21; font: " + os.path.join(dir, '../data/media/lucida.ttf') + ", size=32x32")
     terminal.set("input.filter={keyboard+}") #Enable key-release events.
     terminal.composition(terminal.TK_ON)
     terminal.bkcolor(terminal.color_from_name("gray"))
@@ -39,11 +41,10 @@ def main():
     #initialize blank tile_map
     tile_map = [[[" " for _ in range(map_width)] for _ in range(map_length)] for _ in range(map_depth)]
     
-    mod = build_mod(load_json(os.path.join(mods_dir, "vanilla\\"), pickle = False))
-    zone = [[[Tile(kind = mod['tiles'][c]) for c in list] for list in grid] for grid in 
-            load_json('../data/placeholder/map2.json', pickle = False)]
-    load_zone(zone, tile_map, z = 1, y = 1)
-    overlay = load_UTF('../data/placeholder/overlay.txt')
+    blueprints = build_blueprints(load_json(os.path.join(mods_dir, "vanilla\\blueprints\\"), pickle = False))
+    zone = load_zone(os.path.join(dir, '../data/placeholder/map2.json'), tile_map, blueprints)
+    paste_zone(zone, tile_map, z = 1, y = 1)
+    overlay = load_UTF(os.path.join(dir, '../data/placeholder/overlay.txt'))
 
     proceed = True
 
@@ -122,7 +123,7 @@ def main():
                         assert higher_tile_already_rendered not in DO_NOT_RENDER
                         if z < camera_height:
                             terminal.put_ext(0, 0, sx, sy, 0x2588, (terminal.color_from_name('yellow'),terminal.color_from_name('red')) * 4)
-                        terminal.put_ext(0, 0, sx, sy, tile_map[z][y][x].kind.icon)
+                        terminal.put_ext(0, 0, sx, sy, tile_map[z][y][x].blueprint.icon)
                         higher_tile_already_rendered[y][x] = tile_map[z][y][x] 
         
         #print overlay
@@ -215,16 +216,15 @@ def longest_in_list(l : list, k : int):
         length = max(length, new_length) 
     return length
 
-# loads the given zone onto the given map with the given offset
+def load_zone(path, map, blueprints):
+    zone_json = load_json(path, pickle = False)
+    zone = [[[Tile(blueprint = blueprints['tile'][c]) for c in list] for list in grid] for grid in 
+            zone_json]
+    return zone
+
+# pastes the given zone onto the given map with the given offset
 # will throw an error if map bounds are exceeded in the process
-# for now zone attributes will just be LEVEL-X, but in the future there may be optional UNIT, ATMOSPHERE, and COLLAPSE
-# every character corresponds to exactly one tile, but units are different
-# Tiles primary attributes are height and width. Width is not physically modelled, height is.
-# Tiles are twice as high as long as in OpenXCOM, and always have a floor
-# For purposes of movement, tiles are either half-raised or not, independent of height. Standing on half-raised raises your height by half.
-# You can move up to half-raised at +1TU, up from half-raised to full-raised at 0 TU
-# Autofall for 0 damage like OpenXCOM
-def load_zone(zone : list, map : list, x = 0, y = 0, z = 0):
+def paste_zone(zone : list, map : list, x = 0, y = 0, z = 0):
     #bounds for zone and map respectively
     #NOTE potentially low-performance
     mz, my, mx = bounds(map)

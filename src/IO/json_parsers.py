@@ -1,8 +1,10 @@
+import json
 import os
 
-import json
 import jsonpickle
+
 from IO.paths import saves_dir
+
 
 sort_keys = True
 indent = 1

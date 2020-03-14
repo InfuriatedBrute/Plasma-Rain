@@ -1,11 +1,10 @@
 from _ast import Str
 from builtins import int, str
-
-from numpy import char
-
 from dataclasses import dataclass
 from enum import Enum
+from numpy import char
 from random import choice, randint
+
 from utils.decorators import initialize_all_pre
 
 

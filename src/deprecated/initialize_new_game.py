@@ -1,5 +1,7 @@
 from os.path import join
+
 from IO.json_parsers import load_json
+
 
 mods_dir = "../../data/mods"
 
