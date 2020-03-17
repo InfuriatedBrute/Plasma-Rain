@@ -40,8 +40,8 @@ def main():
     map_depth, map_length, map_width = 4, 60, 60
     #initialize blank tile_map
     tile_map = [[[" " for _ in range(map_width)] for _ in range(map_length)] for _ in range(map_depth)]
-    
-    blueprints = build_blueprints(load_json(os.path.join(mods_dir, "vanilla\\blueprints\\"), pickle = False))
+    print(mods_dir)
+    blueprints = build_blueprints(load_json(os.path.join(mods_dir, "vanilla/blueprints/"), pickle = False))
     zone = load_zone(os.path.join(dir, '../data/placeholder/map2.json'), tile_map, blueprints)
     paste_zone(zone, tile_map, z = 1, y = 1)
     overlay = load_UTF(os.path.join(dir, '../data/placeholder/overlay.txt'))
@@ -61,8 +61,7 @@ def main():
     """
     def reset_bounds():
         #nonlocal allows modification of outer function's variables
-        nonlocal screen_width, screen_length, display_min_y, display_max_y, display_min_x, display_max_x, \
-        min_yoffset, max_yoffset, min_xoffset, max_xoffset
+        nonlocal screen_width, screen_length, display_min_y, display_max_y, display_min_x, display_max_x, min_yoffset, max_yoffset, min_xoffset, max_xoffset
         
         screen_length = terminal.state(terminal.TK_HEIGHT) * terminal.state(terminal.TK_CELL_HEIGHT)
         screen_width = terminal.state(terminal.TK_WIDTH) * terminal.state(terminal.TK_CELL_WIDTH)
