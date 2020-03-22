@@ -1,3 +1,7 @@
 {
- "m" : {"mouseover_name" : "Sandbags", "width" : 80, "depth" : 20}
+  "m": {
+    "mouse_over_name": "Sandbags",
+    "width": 80,
+    "depth": 20
+  }
 }

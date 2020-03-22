@@ -10,13 +10,14 @@ from enum import Enum
 
 class MainState(Enum):
     MAIN, \
-     B_MAIN, B_INV, B_ENEMY, B_AIMING = range(0, 21)
+    B_MAIN, B_INV, B_ENEMY, B_AIMING = range(0, 21)
 
-    
+
 class EscapeState(Enum):
     NONE, MAIN = range(0, 6)
-    
+
+
 @dataclass
 class totalState:
-    main : MainState
-    escape : EscapeState
+    main: MainState
+    escape: EscapeState
