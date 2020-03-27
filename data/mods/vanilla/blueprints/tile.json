@@ -1,6 +1,6 @@
 {
-  "m": {
-    "mouse_over_name": "Sandbags",
+  "Sandbags": {
+    "icon": "m",
     "width": 80,
     "depth": 20
   }

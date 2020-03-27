@@ -13,7 +13,8 @@ FPS = 60
 SPEED_CAP = 40
 SPEED_ACCELERATION = 1
 MAP_DEPTH, MAP_LENGTH, MAP_WIDTH = 4, 20, 20
-TILE_SIZE = 32
+INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_LENGTH = 28, 21
+TILE_SIZE = 24
 # In fractions of screen size
 SCROLL_LENIENCY = 0
 EMPTY_TILE = Tile()
@@ -28,7 +29,9 @@ def main():
 
     terminal.set("output.vsync=true")
     terminal.set("window: title='Plasma Rain', resizeable=true, minimum-size=16x12")
-    terminal.set("window: size=28x21; font: " + os.path.join(DIR_PATH, '../data/media/lucida.ttf') + ", size=32x32")
+    terminal.set("window: size={}x{}; font: ".format(INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_LENGTH)
+                 + os.path.join(DIR_PATH, '../data/media/lucida.ttf') +
+                 ", size={}x{}".format(TILE_SIZE, TILE_SIZE))
     terminal.set("input.filter= [keyboard+, mouse_move]")  # Only key release and mouse move trigger state updates
     terminal.composition(terminal.TK_ON)
     terminal.bkcolor(terminal.color_from_name("gray"))
@@ -120,10 +123,10 @@ def main():
 
         mouse_over = get_highest_tile_if_exists(camera_height, mouse_y, mouse_x)
         if mouse_over is not None:
-            mouse_over = mouse_over.blueprint.mouse_over_name
+            mouse_over = mouse_over.blueprint.name
 
         terminal.print(2, 0, "speed: {}, {}".format(x_speed, y_speed))
-        terminal.print(2, 1, "offset: {}, {}".format(ix, iy))
+        terminal.print(2, 1, "offset: {}, {}, height : {}".format(ix, iy, camera_height))
         terminal.print(2, 2, "tile at ({}, {}): {}".format(mouse_x, mouse_y, mouse_over))
 
         higher_tile_already_rendered: [[bool]] = [[False
@@ -196,6 +199,7 @@ def main():
         terminal.delay(1000 // FPS)
     terminal.close()
 
+
 def prep(line: str) -> str:
     return line[0:-2] if line[-2:] == '\r\n' else line
 
@@ -246,7 +250,11 @@ def longest_in_list(x: list, k: int) -> int:
 
 def load_zone(path, blueprints) -> [[[Tile]]]:
     zone_json = load_json(path, pickle=False)
-    zone = [[[Tile(blueprint=blueprints['tile'][c]) for c in row] for row in grid] for grid in
+
+    def find_bp_by_icon(c):
+        return next((bp for bp in blueprints['tile'].values() if bp.icon and bp.icon == c), EMPTY_TILE.blueprint)
+
+    zone = [[[Tile(blueprint=find_bp_by_icon(c)) for c in row] for row in grid] for grid in
             zone_json]
     return zone
 
