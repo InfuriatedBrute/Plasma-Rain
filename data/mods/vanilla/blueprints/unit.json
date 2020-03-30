@@ -1,7 +1,8 @@
 {
   "Human": {
     "icon": "@",
-    "width": 50,
-    "depth": 30
+    "start_stats": [[1,2], [1,2], [1,2], [1,2], [1,2]],
+    "potential_stats": [[1,2], [1,2], [1,2], [1,2], [1,2]],
+    "allowed_armors": ["Suit"]
   }
 }

@@ -2,7 +2,7 @@ import inspect
 from builtins import int
 from dataclasses import dataclass
 
-blueprint_class_name_list = ['tile']
+blueprint_class_name_list = ['tile', 'unit', 'armor']
 
 
 def build_blueprints(x: dict):
@@ -22,8 +22,8 @@ def build_blueprints(x: dict):
             bp_dict.update({'name': bp_name})
 
             for key, value in x[class_name][bp_name].items():
-                if value is [(int, int)]:  # assume it is a range
-                    bp_dict.update(map((lambda start, end: range(start, end)), value))
+                if value is [[int]]:  # assume it is a range
+                    bp_dict.update(map((lambda entry: range(entry[0], entry[1])), value))
 
             # END conversion code, for fixing some of the quirks in json format
 
@@ -71,5 +71,6 @@ class UnitBlueprint:
 @dataclass
 class Unit:
     blueprint: UnitBlueprint
+    armor: ArmorBlueprint
     current_stats: [int]*5
     overlay_stats: [int]*5

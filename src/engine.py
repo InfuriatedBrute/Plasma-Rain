@@ -3,18 +3,18 @@ import os.path
 import time
 
 from bearlibterminal import terminal
-from typing import Optional
+from typing import Union, Optional
 
 from IO.json_parsers import load_json
 from IO.paths import mods_dir
-from data.blueprint_objects import build_blueprints, Tile
+from data.blueprint_objects import build_blueprints, Tile, Unit
 
 FPS = 60
 SPEED_CAP = 40
 SPEED_ACCELERATION = 1
 MAP_DEPTH, MAP_LENGTH, MAP_WIDTH = 4, 20, 20
-INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_LENGTH = 28, 21
-TILE_SIZE = 24
+INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_LENGTH = 37, 21
+TILE_LENGTH, TILE_WIDTH = 24, 18
 # In fractions of screen size
 SCROLL_LENIENCY = 0
 EMPTY_TILE = Tile()
@@ -31,7 +31,7 @@ def main():
     terminal.set("window: title='Plasma Rain', resizeable=true, minimum-size=16x12")
     terminal.set("window: size={}x{}; font: ".format(INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_LENGTH)
                  + os.path.join(DIR_PATH, '../data/media/lucida.ttf') +
-                 ", size={}x{}".format(TILE_SIZE, TILE_SIZE))
+                 ", size={}x{}".format(TILE_WIDTH, TILE_LENGTH))
     terminal.set("input.filter= [keyboard+, mouse_move]")  # Only key release and mouse move trigger state updates
     terminal.composition(terminal.TK_ON)
     terminal.bkcolor(terminal.color_from_name("gray"))
@@ -47,7 +47,14 @@ def main():
                               for _ in range(MAP_WIDTH)]
                              for _ in range(MAP_LENGTH)]
                             for _ in range(MAP_DEPTH)]
+    unit_map: [[[Optional[Unit]]]] = [[[None
+                                        for _ in range(MAP_WIDTH)]
+                                       for _ in range(MAP_LENGTH)]
+                                      for _ in range(MAP_DEPTH)]
     blueprints = build_blueprints(load_json(os.path.join(mods_dir, "vanilla/blueprints/"), pickle=False))
+    unit_map[0][0][0] = Unit(blueprint=blueprints['unit']['Human'], armor=blueprints['armor']['Suit'],
+                             current_stats=[0, 0, 0, 0, 0],
+                             overlay_stats=[0, 0, 0, 0, 0])
     zone = load_zone(os.path.join(DIR_PATH, '../data/placeholder/map2.json'), blueprints)
     paste_zone(zone, tile_map, z=0, y=0)
 
@@ -60,7 +67,7 @@ def main():
     # set offset_leniency to 1 and you will only be allowed to scroll 1 more tile than enough to see every tile
     # in general the coordinate system is z, y, x: depth, length, width. No height because it's ambiguous.
     screen_width, screen_length, display_min_y, display_max_y, display_min_x, display_max_x, \
-        min_y_offset, max_y_offset, min_x_offset, max_x_offset, x_scroll_leniency, y_scroll_leniency = (0,) * 12
+    min_y_offset, max_y_offset, min_x_offset, max_x_offset, x_scroll_leniency, y_scroll_leniency = (0,) * 12
 
     """
     Adjusts the bounds defined above, to be called when opening and resizing
@@ -71,28 +78,32 @@ def main():
         nonlocal screen_width, screen_length, display_min_y, display_max_y, display_min_x, display_max_x, \
             min_y_offset, max_y_offset, min_x_offset, max_x_offset, y_scroll_leniency, x_scroll_leniency
 
-        screen_length = terminal.state(terminal.TK_HEIGHT) * TILE_SIZE
-        screen_width = terminal.state(terminal.TK_WIDTH) * TILE_SIZE
+        screen_length = terminal.state(terminal.TK_HEIGHT) * TILE_LENGTH
+        screen_width = terminal.state(terminal.TK_WIDTH) * TILE_WIDTH
 
         y_scroll_leniency = int(screen_length * SCROLL_LENIENCY)
         x_scroll_leniency = int(screen_length * SCROLL_LENIENCY)
 
-        display_min_y = 0 + MARGIN_TOP * TILE_SIZE
-        display_max_y = screen_length - MARGIN_BOTTOM * TILE_SIZE
-        display_min_x = 0 + MARGIN_LEFT * TILE_SIZE
-        display_max_x = screen_width - MARGIN_RIGHT * TILE_SIZE
+        display_min_y = 0 + MARGIN_TOP * TILE_LENGTH
+        display_max_y = screen_length - MARGIN_BOTTOM * TILE_LENGTH
+        display_min_x = 0 + MARGIN_LEFT * TILE_WIDTH
+        display_max_x = screen_width - MARGIN_RIGHT * TILE_WIDTH
 
         # TODO convert offsets into actual tile offsets, exclude the complex GUI stuff
         min_y_offset = min(0, -y_scroll_leniency)
-        max_y_offset = max(0, -screen_length + MAP_WIDTH * TILE_SIZE + y_scroll_leniency)
+        max_y_offset = max(0, -screen_length + MAP_WIDTH * TILE_LENGTH + y_scroll_leniency)
         min_x_offset = min(0, -x_scroll_leniency)
-        max_x_offset = max(0, -screen_width + MAP_WIDTH * TILE_SIZE + x_scroll_leniency)
+        max_x_offset = max(0, -screen_width + MAP_WIDTH * TILE_WIDTH + x_scroll_leniency)
 
-    def get_highest_tile_if_exists(start_z: int, tile_y: int, tile_x: int) -> Optional[Tile]:
+    def get_highest_object_if_exists(start_z: int, tile_y: int, tile_x: int,
+                                     include_tiles: bool = True, include_units: bool = False) -> \
+            Union[None, Tile, Unit]:
         if tile_y not in range(0, MAP_WIDTH) or tile_x not in range(0, MAP_LENGTH):
             return None
         for zi in range(start_z, -1, -1):
-            if tile_map[zi][tile_y][tile_x] != EMPTY_TILE:
+            if include_units and unit_map[zi][tile_y][tile_x] is not None:
+                return unit_map[zi][tile_y][tile_x]
+            elif include_tiles and tile_map[zi][tile_y][tile_x] != EMPTY_TILE:
                 return tile_map[zi][tile_y][tile_x]
         return None
 
@@ -107,27 +118,30 @@ def main():
         # t = partial-tile offset in pixels
         # i = full-tile offset in tiles
         # c = number of tiles to render
-        ty = y_offset % TILE_SIZE
-        tx = x_offset % TILE_SIZE
-        iy = y_offset // TILE_SIZE
-        ix = x_offset // TILE_SIZE
+        ty = y_offset % TILE_LENGTH
+        tx = x_offset % TILE_WIDTH
+        iy = y_offset // TILE_LENGTH
+        ix = x_offset // TILE_WIDTH
         # vc = screen_length // TILE_SIZE + 1
         # hc = screen_width // TILE_SIZE + 1
-        mouse_x = terminal.state(terminal.TK_MOUSE_X) - x_offset - display_min_x // TILE_SIZE
-        mouse_y = terminal.state(terminal.TK_MOUSE_Y) - y_offset - display_min_y // TILE_SIZE
+        mouse_x = terminal.state(terminal.TK_MOUSE_X) - x_offset - display_min_x // TILE_WIDTH
+        mouse_y = terminal.state(terminal.TK_MOUSE_Y) - y_offset - display_min_y // TILE_LENGTH
 
         x_offset = clamp(x_offset + x_speed, min_x_offset, max_x_offset)
         y_offset = clamp(y_offset + y_speed, min_y_offset, max_y_offset)
 
         terminal.clear()
 
-        mouse_over = get_highest_tile_if_exists(camera_height, mouse_y, mouse_x)
-        if mouse_over is not None:
-            mouse_over = mouse_over.blueprint.name
+        mouse_over_tile = get_highest_object_if_exists(camera_height, mouse_y, mouse_x)
+        mouse_over_tile = mouse_over_tile.blueprint.name if mouse_over_tile is not None else "Empty"
+        mouse_over_unit = get_highest_object_if_exists(camera_height, mouse_y, mouse_x,
+                                                       include_units=True, include_tiles=False)
+        mouse_over_unit = mouse_over_unit.blueprint.name if mouse_over_unit else "Empty"
 
         terminal.print(2, 0, "speed: {}, {}".format(x_speed, y_speed))
         terminal.print(2, 1, "offset: {}, {}, height : {}".format(ix, iy, camera_height))
-        terminal.print(2, 2, "tile at ({}, {}): {}".format(mouse_x, mouse_y, mouse_over))
+        terminal.print(2, 2, "tile at ({}, {}): {}".format(mouse_x, mouse_y, mouse_over_tile))
+        terminal.print(2, 3, "unit: {}".format(mouse_over_unit))
 
         higher_tile_already_rendered: [[bool]] = [[False
                                                    for _ in range(MAP_WIDTH)]
@@ -138,18 +152,24 @@ def main():
             for y in range(0, MAP_LENGTH):
                 for x in range(0, MAP_WIDTH):
                     # s = final coords in pixels
-                    sx = (x + ix) * TILE_SIZE + tx + display_min_x
-                    sy = (y + iy) * TILE_SIZE + ty + display_min_y
+                    sx = (x + ix) * TILE_WIDTH + tx + display_min_x
+                    sy = (y + iy) * TILE_LENGTH + ty + display_min_y
                     # render only on-screen tiles
                     if (display_min_y <= sy <= display_max_y
                             and display_min_x <= sx <= display_max_x
                             and not higher_tile_already_rendered[y][x]
-                            and tile_map[z][y][x] != EMPTY_TILE):
-                        if z < camera_height and tile_map[z][y][x] != EMPTY_TILE:
-                            terminal.put_ext(0, 0, sx, sy, 0x2588,
-                                             (terminal.color_from_name('yellow'), terminal.color_from_name('red')) * 4)
-                        terminal.put_ext(0, 0, sx, sy, tile_map[z][y][x].blueprint.icon)
-                        higher_tile_already_rendered[y][x] = tile_map[z][y][x] != EMPTY_TILE
+                            and (tile_map[z][y][x] != EMPTY_TILE or unit_map[z][y][x] is not None)):
+                        if unit_map[z][y][x] is not None:
+                            terminal.put_ext(0, 0, sx, sy, unit_map[z][y][x].blueprint.icon)
+                            higher_tile_already_rendered[y][x] = True
+                            # TODO why is it printing two chars?
+                        else:
+                            if z < camera_height and tile_map[z][y][x] != EMPTY_TILE:
+                                terminal.put_ext(0, 0, sx, sy, 0x2588,
+                                                 (terminal.color_from_name('yellow'),
+                                                  terminal.color_from_name('red')) * 4)
+                            terminal.put_ext(0, 0, sx, sy, tile_map[z][y][x].blueprint.icon)
+                            higher_tile_already_rendered[y][x] = True
 
         terminal.refresh()
 
